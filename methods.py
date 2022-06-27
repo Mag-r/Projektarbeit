@@ -12,7 +12,7 @@ def createPolymer(sigmaLJ, epsLJ, cutLJ, syst,bpc,bondLength=1,kFene=7,d_r_max=2
     syst.bonded_inter.add(fene)
 
     initPos = np.random.rand(3)*syst.box_l
-    #initPos=initPos.tolist()
+
     
     p_Previous=syst.part.add(pos=initPos)
     distancePerDimension=np.power(3*bondLength,-1/2)
