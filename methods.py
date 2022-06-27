@@ -12,8 +12,6 @@ def createPolymer(sigmaLJ, epsLJ, cutLJ, syst,bpc,bondLength=1,kFene=7,d_r_max=2
     syst.bonded_inter.add(fene)
 
     initPos = np.random.rand(3)*syst.box_l
-
-    
     p_Previous=syst.part.add(pos=initPos)
     distancePerDimension=np.power(3*bondLength,-1/2)
     for i in range(1,bpc):
@@ -26,6 +24,10 @@ def createPolymer(sigmaLJ, epsLJ, cutLJ, syst,bpc,bondLength=1,kFene=7,d_r_max=2
 
 
 def barostat(syst,deltaV,numberOfParticles,pressure):
+    '''
+    implements a barostat using MC with the acceptance function
+    P(O->N)= exp(- beta *(EN-EO + pressure*(VN-VO))+numberOfParticles *log(VN/VO))
+    '''
     
     oldV=np.power(syst.box_l[0],3)
     
