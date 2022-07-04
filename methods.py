@@ -23,7 +23,7 @@ def createPolymer(sigmaLJ, epsLJ, cutLJ, syst,bpc,bondLength=1,kFene=7,d_r_max=2
     syst.integrator.run(100)
 
 
-def barostat(syst,deltaV,numberOfParticles,pressure):
+def barostat(syst,deltaV,pressure):
     '''
     implements a barostat using MC with the acceptance function
     P(O->N)= exp(- beta *(EN-EO + pressure*(VN-VO))+numberOfParticles *log(VN/VO))
@@ -31,6 +31,8 @@ def barostat(syst,deltaV,numberOfParticles,pressure):
     
     oldV=syst.volume()
     vPrime= oldV + np.random.normal(loc=0,scale=deltaV,size=None)
+    if vPrime<0:
+        vPrime=-vPrime
     if np.power(vPrime,1/3)<=2*(syst.cell_system.interaction_range):
         print("zu klein")
         print(np.power(vPrime,1/3))
@@ -41,7 +43,7 @@ def barostat(syst,deltaV,numberOfParticles,pressure):
 
     newEnergy = syst.analysis.energy()
 
-    acceptance=np.exp(-beta*(newEnergy['total']-oldEnergy['total']+ pressure*(vPrime-oldV))+(numberOfParticles)*np.log(vPrime/oldV))
+    acceptance=np.exp(-beta*(newEnergy['total']-oldEnergy['total']+ pressure*(vPrime-oldV))+(len(syst.part.all()))*np.log(vPrime/oldV))
     if acceptance<1:
         if acceptance<np.random.uniform():
             syst.change_volume_and_rescale_particles(np.power(oldV,1/3),dir ='xyz')
