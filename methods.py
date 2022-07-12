@@ -1,4 +1,5 @@
 
+from platform import node
 import espressomd
 from espressomd import polymer, visualization, checkpointing
 import numpy as np
@@ -57,4 +58,58 @@ def createDiamond(syst,mpc,bondLength=1,kFene=7,d_r_max=2):
     espressomd.polymer.setup_diamond_polymer(system=syst,bond=fene,MPC=mpc)
     syst.integrator.set_steepest_descent(f_max=0.01,gamma=30,max_displacement=0.01)
     syst.integrator.run(100)
+
+
+
+def createMultipleDiamonds(syst,mpc_distribution,numberOfDiamondsPerDim,bondLength=1,kFene=7,d_r_max=2):
+    box_length=syst.box_l[0]
+    fene =espressomd.interactions.FeneBond(k=kFene,r_0=1.733*box_length/(4.0*numberOfDiamondsPerDim),d_r_max=d_r_max*5)
+    syst.bonded_inter.add(fene)
+
+    initial_node_positions= np.array([[0, 0, 0], [1, 1, 1],
+                                                 [2, 2, 0], [0, 2, 2],
+                                                 [2, 0, 2], [3, 3, 1],
+                                                 [1, 3, 3], [3, 1, 3]])
+
+    node_positions=np.array([])
+    
+    #copy diamant structure
+    for i in range(numberOfDiamondsPerDim):
+        for j in range(numberOfDiamondsPerDim):
+            for k in range(numberOfDiamondsPerDim):
+                node_positions=np.append(node_positions,initial_node_positions+4*np.array([i,j,k]).transpose())
+    node_positions=node_positions.reshape((-1,3))
+    node_positions=node_positions*box_length/ (4.0*numberOfDiamondsPerDim)
+    syst.part.add(pos=node_positions)
+
+
+    for i in range(np.shape(node_positions)[0]):
+        for j in range(i+1,np.shape(node_positions)[0]):
+            node_connection_vector=node_positions[i]-node_positions[j]
+            node_connection_vector-=np.rint(node_connection_vector/box_length)*box_length
+            if np.linalg.norm(node_connection_vector)<=1.733*box_length/(4.0*numberOfDiamondsPerDim):
+                mpc=mpc_distribution()
+                if mpc <=0:
+                    raise Exception("mpc needs to be a positive number")
+
+                #create bonds
+                p=syst.part.add(pos=node_positions[i]-node_connection_vector/(mpc+1))
+                start_point=syst.part.select(lambda p:np.array(p.pos == node_positions[i]).all())
+                start_point.add_bond((fene,p))  
+                p_previous =p
+                for k in range(2,mpc+1):
+                    p=syst.part.add(pos=node_positions[i]-node_connection_vector*k/(mpc+1))
+                    p.add_bond((fene,p_previous))
+                    p_previous=p
+                
+                end_point=syst.part.select(lambda p:np.array(p.pos == node_positions[j]).all())
+                end_point.add_bond((fene,p))
+                
+
+    
+
+    
+
+
+
 
