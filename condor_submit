@@ -1,0 +1,9 @@
+universe = vanilla
+initialdir=
+executable=
+error =err.$(Process)
+log=log.$(Process)
+output=out.§(Process)
+
+Queue 10
+

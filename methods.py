@@ -46,8 +46,7 @@ def barostat(syst,deltaV,pressure):
     newEnergy = syst.analysis.energy()
 
     acceptance=np.exp(-beta*(newEnergy['total']-oldEnergy['total']+ pressure*(vPrime-oldV))+(syst.part.highest_particle_id+2)*np.log(vPrime/oldV))
-    # print(newEnergy)
-    # print(oldEnergy['total'])
+
     if acceptance<1:
         if acceptance>np.random.uniform():
             syst.change_volume_and_rescale_particles(np.power(oldV,1/3),dir ='xyz')
@@ -94,7 +93,7 @@ def force_capping(syst,f_tol=0.0001,dampening=30,max_displacement=0.01,max_itera
 
 def createMultipleDiamonds(syst,mpc_distribution,numberOfDiamondsPerDim,bondLength=1,kFene=7,d_r_max=2):
     box_length=syst.box_l[0]
-    fene =espressomd.interactions.FeneBond(k=kFene,r_0=1.733*box_length/(4.0*numberOfDiamondsPerDim),d_r_max=d_r_max)
+    fene =espressomd.interactions.FeneBond(k=kFene,r_0=0,d_r_max=d_r_max)
     syst.bonded_inter.add(fene)
 
     initial_node_positions= np.array([[0, 0, 0], [1, 1, 1],
@@ -124,18 +123,15 @@ def createMultipleDiamonds(syst,mpc_distribution,numberOfDiamondsPerDim,bondLeng
             node_connection_vector-=np.rint(node_connection_vector/box_length)*box_length
 
             #create bonds
-            p=syst.part.add(pos=pair[0].pos+node_connection_vector/(mpc+1))
-            start_point=pair[0]#syst.part.by_id(i)#syst.part.select(lambda p:np.array(p.pos == node_positions[i]).all())
-            start_point.add_bond((fene,p))  
-            print(syst.analysis.energy()['bonded'])
-            p_previous =p
-            for k in range(2,mpc+1):
+
+            p_previous =pair[0]
+            for k in range(1,mpc+1):
                 p=syst.part.add(pos=pair[0].pos+node_connection_vector*k/(mpc+1))
                 p.add_bond((fene,p_previous))
                 p_previous=p
             
-            end_point=pair[1]#syst.part.by_id(j)#syst.part.select(lambda p:np.array(p.pos == node_positions[j]).all())
-            end_point.add_bond((fene,p))
+            end_point=pair[1]
+            end_point.add_bond((fene,p_previous))
             
 
     

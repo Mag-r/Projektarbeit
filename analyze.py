@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import bottleneck as bn
 
 
-data = np.loadtxt("sampledPressure")
+data = np.loadtxt("sampledVolume")
 
 plt.plot(data)
 print(np.mean(data))
