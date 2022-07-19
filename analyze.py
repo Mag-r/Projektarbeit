@@ -7,5 +7,5 @@ import bottleneck as bn
 data = np.loadtxt("sampledPressure")
 
 plt.plot(data)
-print(np.mean(data[10000:]))
+print(np.mean(data))
 plt.show()
